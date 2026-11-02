@@ -1,0 +1,196 @@
+name: Build YTXTube TV
+
+# Compila YTXTube (v2.1.0, commit fijo del repo original) con un parche para Android TV / Fire TV:
+#  - inicio en cuadricula (2-4 columnas) en lugar de una tarjeta gigante
+#  - los cuadros de ajustes reciben el foco del control remoto
+#  - una sola parada de foco por tarjeta de video
+#  - se instala junto a la app original (id com.tensei.ytxtube.tv)
+# Resultado: release "tv-latest" con el archivo YTXTube-TV.apk (para Downloader).
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Descargar codigo original
+        uses: actions/checkout@v4
+        with:
+          repository: Koustubh12345/YTXTube
+          ref: 15ad04036173bb3c81f67b45b68cf5b761e7218a
+          path: src
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Aplicar parche de TV
+        working-directory: src
+        run: |
+          base64 -d <<'PATCH_EOF' | git apply --verbose -
+          ZGlmZiAtLWdpdCBhL2FwcC9idWlsZC5ncmFkbGUua3RzIGIvYXBwL2J1aWxkLmdyYWRsZS5rdHMK
+          aW5kZXggYWYyZWY3YS4uNGFlOGI0OCAxMDA2NDQKLS0tIGEvYXBwL2J1aWxkLmdyYWRsZS5rdHMK
+          KysrIGIvYXBwL2J1aWxkLmdyYWRsZS5rdHMKQEAgLTMyLDYgKzMyLDEwIEBAIGFuZHJvaWQgewog
+          ICAgICAgICAgICAgaXNNaW5pZnlFbmFibGVkID0gdHJ1ZQogICAgICAgICAgICAgaXNTaHJpbmtS
+          ZXNvdXJjZXMgPSB0cnVlCiAKKyAgICAgICAgICAgIC8vIFRWIGJ1aWxkIGluc3RhbGxzIG5leHQg
+          dG8gdGhlIG9yaWdpbmFsIGFwcCAoZGlmZmVyZW50IGlkKSBpbnN0ZWFkIG9mIGNsYXNoaW5nCisg
+          ICAgICAgICAgICAvLyB3aXRoIGl0cyBzaWduYXR1cmUsIHNvIG5vdGhpbmcgaGFzIHRvIGJlIHVu
+          aW5zdGFsbGVkIGZpcnN0LgorICAgICAgICAgICAgYXBwbGljYXRpb25JZFN1ZmZpeCA9ICIudHYi
+          CisgICAgICAgICAgICB2ZXJzaW9uTmFtZVN1ZmZpeCA9ICItdHYiCiAKICAgICAgICAgICAgIHNp
+          Z25pbmdDb25maWcgPSBzaWduaW5nQ29uZmlncy5nZXRCeU5hbWUoImRlYnVnIikKICAgICAgICAg
+          ICAgIHByb2d1YXJkRmlsZXMoCmRpZmYgLS1naXQgYS9hcHAvc3JjL21haW4vamF2YS9jb20vdGVu
+          c2VpL3l0eHR1YmUvRmVlZHMua3QgYi9hcHAvc3JjL21haW4vamF2YS9jb20vdGVuc2VpL3l0eHR1
+          YmUvRmVlZHMua3QKaW5kZXggYWI0NTMyNC4uYTI1ZGYxNiAxMDA2NDQKLS0tIGEvYXBwL3NyYy9t
+          YWluL2phdmEvY29tL3RlbnNlaS95dHh0dWJlL0ZlZWRzLmt0CisrKyBiL2FwcC9zcmMvbWFpbi9q
+          YXZhL2NvbS90ZW5zZWkveXR4dHViZS9GZWVkcy5rdApAQCAtNDEsNiArNDEsNyBAQCBpbXBvcnQg
+          YW5kcm9pZHguY29tcG9zZS5ydW50aW1lLnJlbWVtYmVyQ29yb3V0aW5lU2NvcGUKIGltcG9ydCBh
+          bmRyb2lkeC5jb21wb3NlLnJ1bnRpbWUuc2V0VmFsdWUKIGltcG9ydCBhbmRyb2lkeC5jb21wb3Nl
+          LnVpLkFsaWdubWVudAogaW1wb3J0IGFuZHJvaWR4LmNvbXBvc2UudWkuTW9kaWZpZXIKK2ltcG9y
+          dCBhbmRyb2lkeC5jb21wb3NlLnVpLnBsYXRmb3JtLkxvY2FsQ29uZmlndXJhdGlvbgogaW1wb3J0
+          IGFuZHJvaWR4LmNvbXBvc2UudWkudW5pdC5EcAogaW1wb3J0IGFuZHJvaWR4LmNvbXBvc2UudWku
+          dW5pdC5kcAogaW1wb3J0IGtvdGxpbnguY29yb3V0aW5lcy5Db3JvdXRpbmVTY29wZQpAQCAtMjI3
+          LDYgKzIyOCwxMyBAQCBmdW4gRmVlZExpc3QoCiAgICAgfQogICAgIHZhbCBsaXN0ID0gcmVtZW1i
+          ZXJTY3JvbGxUb1RvcChzY3JvbGxUb1RvcCkKIAorICAgIC8vIFRWOiB0aGUgcGhvbmUgZmVlZCBp
+          cyBvbmUgZnVsbC13aWR0aCBjYXJkIHBlciByb3csIHdoaWNoIG9uIGEgMTAtZm9vdCBzY3JlZW4g
+          c2hvd3MgYSBzaW5nbGUKKyAgICAvLyBodWdlIHZpZGVvLiBMYXkgdGhlIGNhcmRzIG91dCBpbiBy
+          b3dzIG9mIDItNCBpbnN0ZWFkICh3aWR0aCBkZWNpZGVzIGhvdyBtYW55IGZpdCkuCisgICAgdmFs
+          IHR2Q29sdW1ucyA9IGlmIChUdk1vZGUuaXNUdikgKExvY2FsQ29uZmlndXJhdGlvbi5jdXJyZW50
+          LnNjcmVlbldpZHRoRHAgLyAzMjApLmNvZXJjZUluKDIsIDQpIGVsc2UgMQorICAgIHZhbCB0dlJv
+          d3M6IExpc3Q8TGlzdDxWaWRlb0l0ZW0+PiA9IHJlbWVtYmVyKGxpc3RWaWRlb3MsIHR2Q29sdW1u
+          cykgeworICAgICAgICBpZiAodHZDb2x1bW5zID4gMSkgbGlzdFZpZGVvcy5jaHVua2VkKHR2Q29s
+          dW1ucykgZWxzZSBlbXB0eUxpc3Q8TGlzdDxWaWRlb0l0ZW0+PigpCisgICAgfQorCiAgICAgTGF1
+          bmNoZWRFZmZlY3QoZmVlZC5nZW5lcmF0aW9uLCBmaWx0ZXJTY3JvbGxLZXkpIHsgbGlzdC5zY3Jv
+          bGxUb0l0ZW0oMCkgfQogICAgIHZhbCBuZWFyRW5kIGJ5IHJlbWVtYmVyIHsKICAgICAgICAgZGVy
+          aXZlZFN0YXRlT2YgewpAQCAtMjM4LDEyICsyNDYsMzMgQEAgZnVuIEZlZWRMaXN0KAogICAgIFB1
+          bGxUb1JlZnJlc2goZW5hYmxlZCA9IHB1bGxUb1JlZnJlc2gsIHJlZnJlc2hpbmcgPSBmZWVkLnJl
+          ZnJlc2hpbmcsIG9uUmVmcmVzaCA9IGZlZWQ6OnJlZnJlc2gsIHRvcFBhZGRpbmcgPSBpbmRpY2F0
+          b3JUb3ApIHsKICAgICBMYXp5Q29sdW1uKHN0YXRlID0gbGlzdCwgY29udGVudFBhZGRpbmcgPSBj
+          b250ZW50UGFkZGluZykgewogICAgICAgICBoZWFkZXIoKQotICAgICAgICBpdGVtcyhsaXN0Vmlk
+          ZW9zLCBrZXkgPSB7IGl0LmlkIH0pIHsgdmlkZW8gLT4KLSAgICAgICAgICAgIFZpZGVvQ2FyZCgK
+          LSAgICAgICAgICAgICAgICB2aWRlbywKLSAgICAgICAgICAgICAgICBvbkNsaWNrID0geyBvbk9w
+          ZW4odmlkZW8pIH0sCi0gICAgICAgICAgICAgICAgbW9kaWZpZXIgPSBNb2RpZmllci5hbmltYXRl
+          SXRlbSgpLAotICAgICAgICAgICAgKQorICAgICAgICBpZiAodHZDb2x1bW5zID4gMSkgeworICAg
+          ICAgICAgICAgaXRlbXModHZSb3dzLCBrZXkgPSB7IHJvdyAtPiByb3cuZmlyc3QoKS5pZCB9KSB7
+          IHJvdyAtPgorICAgICAgICAgICAgICAgIFJvdygKKyAgICAgICAgICAgICAgICAgICAgbW9kaWZp
+          ZXIgPSBNb2RpZmllcgorICAgICAgICAgICAgICAgICAgICAgICAgLmZpbGxNYXhXaWR0aCgpCisg
+          ICAgICAgICAgICAgICAgICAgICAgICAucGFkZGluZyhob3Jpem9udGFsID0gMjQuZHApCisgICAg
+          ICAgICAgICAgICAgICAgICAgICAuYW5pbWF0ZUl0ZW0oKSwKKyAgICAgICAgICAgICAgICAgICAg
+          aG9yaXpvbnRhbEFycmFuZ2VtZW50ID0gQXJyYW5nZW1lbnQuc3BhY2VkQnkoMTYuZHApLAorICAg
+          ICAgICAgICAgICAgICkgeworICAgICAgICAgICAgICAgICAgICByb3cuZm9yRWFjaCB7IHZpZGVv
+          IC0+CisgICAgICAgICAgICAgICAgICAgICAgICBWaWRlb0NhcmQoCisgICAgICAgICAgICAgICAg
+          ICAgICAgICAgICAgdmlkZW8sCisgICAgICAgICAgICAgICAgICAgICAgICAgICAgb25DbGljayA9
+          IHsgb25PcGVuKHZpZGVvKSB9LAorICAgICAgICAgICAgICAgICAgICAgICAgICAgIG1vZGlmaWVy
+          ID0gTW9kaWZpZXIud2VpZ2h0KDFmKSwKKyAgICAgICAgICAgICAgICAgICAgICAgICkKKyAgICAg
+          ICAgICAgICAgICAgICAgfQorICAgICAgICAgICAgICAgICAgICByZXBlYXQodHZDb2x1bW5zIC0g
+          cm93LnNpemUpIHsgU3BhY2VyKE1vZGlmaWVyLndlaWdodCgxZikpIH0KKyAgICAgICAgICAgICAg
+          ICB9CisgICAgICAgICAgICB9CisgICAgICAgIH0gZWxzZSB7CisgICAgICAgICAgICBpdGVtcyhs
+          aXN0VmlkZW9zLCBrZXkgPSB7IGl0LmlkIH0pIHsgdmlkZW8gLT4KKyAgICAgICAgICAgICAgICBW
+          aWRlb0NhcmQoCisgICAgICAgICAgICAgICAgICAgIHZpZGVvLAorICAgICAgICAgICAgICAgICAg
+          ICBvbkNsaWNrID0geyBvbk9wZW4odmlkZW8pIH0sCisgICAgICAgICAgICAgICAgICAgIG1vZGlm
+          aWVyID0gTW9kaWZpZXIuYW5pbWF0ZUl0ZW0oKSwKKyAgICAgICAgICAgICAgICApCisgICAgICAg
+          ICAgICB9CiAgICAgICAgIH0KICAgICAgICAgd2hlbiB7CiAKZGlmZiAtLWdpdCBhL2FwcC9zcmMv
+          bWFpbi9qYXZhL2NvbS90ZW5zZWkveXR4dHViZS9TZXR0aW5nc1NjcmVlbi5rdCBiL2FwcC9zcmMv
+          bWFpbi9qYXZhL2NvbS90ZW5zZWkveXR4dHViZS9TZXR0aW5nc1NjcmVlbi5rdAppbmRleCAwMzZj
+          NDc5Li5hNWQ4Y2MxIDEwMDY0NAotLS0gYS9hcHAvc3JjL21haW4vamF2YS9jb20vdGVuc2VpL3l0
+          eHR1YmUvU2V0dGluZ3NTY3JlZW4ua3QKKysrIGIvYXBwL3NyYy9tYWluL2phdmEvY29tL3RlbnNl
+          aS95dHh0dWJlL1NldHRpbmdzU2NyZWVuLmt0CkBAIC0xLDUgKzEsOSBAQAogcGFja2FnZSBjb20u
+          dGVuc2VpLnl0eHR1YmUKIGltcG9ydCBhbmRyb2lkeC5jb21wb3NlLnVpLndpbmRvdy5EaWFsb2cK
+          K2ltcG9ydCBhbmRyb2lkeC5jb21wb3NlLnVpLndpbmRvdy5EaWFsb2dQcm9wZXJ0aWVzCitpbXBv
+          cnQgYW5kcm9pZHguY29tcG9zZS5mb3VuZGF0aW9uLmZvY3VzR3JvdXAKK2ltcG9ydCBhbmRyb2lk
+          eC5jb21wb3NlLnVpLmZvY3VzLkZvY3VzUmVxdWVzdGVyCitpbXBvcnQgYW5kcm9pZHguY29tcG9z
+          ZS51aS5mb2N1cy5mb2N1c1JlcXVlc3RlcgogaW1wb3J0IGFuZHJvaWQucHJvdmlkZXIuRG9jdW1l
+          bnRzQ29udHJhY3QKIGltcG9ydCBhbmRyb2lkeC5jb21wb3NlLm1hdGVyaWFsMy5DYXJkCiBpbXBv
+          cnQgYW5kcm9pZHguY29tcG9zZS5tYXRlcmlhbDMuQ2FyZERlZmF1bHRzCkBAIC02MzEsOSArNjM1
+          LDM3IEBAIHByaXZhdGUgZnVuIFNldHRpbmdzRmxvYXRpbmdEaWFsb2coCiAgICAgc3VidGl0bGU6
+          IFN0cmluZywKICAgICBvbkRpc21pc3M6ICgpIC0+IFVuaXQsCiAgICAgY29udGVudDogQENvbXBv
+          c2FibGUgKCkgLT4gVW5pdCwKKykgeworICAgIGlmIChUdk1vZGUuaXNUdikgeworICAgICAgICAv
+          LyBPbiBUViB0aGUgcGFuZWwgaGFzIHRvIGxpdmUgaW4gaXRzIG93biB3aW5kb3cuIEFzIGEgcGxh
+          aW4gb3ZlcmxheSB0aGUgRC1wYWQgZm9jdXMgc3RheXMKKyAgICAgICAgLy8gb24gdGhlIHNldHRp
+          bmdzIGxpc3QgdW5kZXJuZWF0aCwgc28gdGhlIHJlbW90ZSBjYW4gbmV2ZXIgcmVhY2ggdGhlIG9w
+          dGlvbnMgaW5zaWRlIGl0LgorICAgICAgICBEaWFsb2coCisgICAgICAgICAgICBvbkRpc21pc3NS
+          ZXF1ZXN0ID0gb25EaXNtaXNzLAorICAgICAgICAgICAgcHJvcGVydGllcyA9IERpYWxvZ1Byb3Bl
+          cnRpZXModXNlUGxhdGZvcm1EZWZhdWx0V2lkdGggPSBmYWxzZSksCisgICAgICAgICkgeworICAg
+          ICAgICAgICAgU2V0dGluZ3NGbG9hdGluZ0RpYWxvZ0JvZHkodGl0bGUsIHN1YnRpdGxlLCBvbkRp
+          c21pc3MsIGNvbnRlbnQpCisgICAgICAgIH0KKyAgICB9IGVsc2UgeworICAgICAgICBCYWNrSGFu
+          ZGxlcihvbkJhY2sgPSBvbkRpc21pc3MpCisgICAgICAgIFNldHRpbmdzRmxvYXRpbmdEaWFsb2dC
+          b2R5KHRpdGxlLCBzdWJ0aXRsZSwgb25EaXNtaXNzLCBjb250ZW50KQorICAgIH0KK30KKworQENv
+          bXBvc2FibGUKK3ByaXZhdGUgZnVuIFNldHRpbmdzRmxvYXRpbmdEaWFsb2dCb2R5KAorICAgIHRp
+          dGxlOiBTdHJpbmcsCisgICAgc3VidGl0bGU6IFN0cmluZywKKyAgICBvbkRpc21pc3M6ICgpIC0+
+          IFVuaXQsCisgICAgY29udGVudDogQENvbXBvc2FibGUgKCkgLT4gVW5pdCwKICkgewogICAgIHZh
+          bCBjID0gTWF0ZXJpYWxUaGVtZS5jb2xvclNjaGVtZQotICAgIEJhY2tIYW5kbGVyKG9uQmFjayA9
+          IG9uRGlzbWlzcykKKyAgICB2YWwgY29udGVudEZvY3VzID0gcmVtZW1iZXIgeyBGb2N1c1JlcXVl
+          c3RlcigpIH0KKyAgICBpZiAoVHZNb2RlLmlzVHYpIHsKKyAgICAgICAgTGF1bmNoZWRFZmZlY3Qo
+          VW5pdCkgeworICAgICAgICAgICAgZGVsYXkoMTUwKQorICAgICAgICAgICAgcnVuQ2F0Y2hpbmcg
+          eyBjb250ZW50Rm9jdXMucmVxdWVzdEZvY3VzKCkgfQorICAgICAgICB9CisgICAgfQogCiAgICAg
+          Qm94KAogICAgICAgICBtb2RpZmllciA9IE1vZGlmaWVyCkBAIC02NDgsNyArNjgwLDcgQEAgcHJp
+          dmF0ZSBmdW4gU2V0dGluZ3NGbG9hdGluZ0RpYWxvZygKICAgICAgICAgQ29sdW1uKAogICAgICAg
+          ICAgICAgbW9kaWZpZXIgPSBNb2RpZmllcgogICAgICAgICAgICAgICAgIC5wYWRkaW5nKGhvcml6
+          b250YWwgPSAxNi5kcCwgdmVydGljYWwgPSAyMC5kcCkKLSAgICAgICAgICAgICAgICAud2lkdGhJ
+          bihtYXggPSA0MTAuZHApCisgICAgICAgICAgICAgICAgLndpZHRoSW4obWF4ID0gaWYgKFR2TW9k
+          ZS5pc1R2KSA2MDAuZHAgZWxzZSA0MTAuZHApCiAgICAgICAgICAgICAgICAgLmZpbGxNYXhXaWR0
+          aCgpCiAgICAgICAgICAgICAgICAgLmNsaXAoUm91bmRlZENvcm5lclNoYXBlKDI0LmRwKSkKICAg
+          ICAgICAgICAgICAgICAuYmFja2dyb3VuZChjLnN1cmZhY2VDb250YWluZXJIaWdoZXN0KQpAQCAt
+          NzIxLDcgKzc1Myw5IEBAIHByaXZhdGUgZnVuIFNldHRpbmdzRmxvYXRpbmdEaWFsb2coCiAgICAg
+          ICAgICAgICBDb2x1bW4oCiAgICAgICAgICAgICAgICAgbW9kaWZpZXIgPSBNb2RpZmllcgogICAg
+          ICAgICAgICAgICAgICAgICAuZmlsbE1heFdpZHRoKCkKLSAgICAgICAgICAgICAgICAgICAgLmhl
+          aWdodEluKG1heCA9IDQ2MC5kcCkKKyAgICAgICAgICAgICAgICAgICAgLmhlaWdodEluKG1heCA9
+          IGlmIChUdk1vZGUuaXNUdikgNTYwLmRwIGVsc2UgNDYwLmRwKQorICAgICAgICAgICAgICAgICAg
+          ICAuZm9jdXNSZXF1ZXN0ZXIoY29udGVudEZvY3VzKQorICAgICAgICAgICAgICAgICAgICAuZm9j
+          dXNHcm91cCgpCiAgICAgICAgICAgICAgICAgICAgIC52ZXJ0aWNhbFNjcm9sbChyZW1lbWJlclNj
+          cm9sbFN0YXRlKCkpLAogICAgICAgICAgICAgKSB7CiAgICAgICAgICAgICAgICAgY29udGVudCgp
+          CmRpZmYgLS1naXQgYS9hcHAvc3JjL21haW4vamF2YS9jb20vdGVuc2VpL3l0eHR1YmUvVWlLaXQu
+          a3QgYi9hcHAvc3JjL21haW4vamF2YS9jb20vdGVuc2VpL3l0eHR1YmUvVWlLaXQua3QKaW5kZXgg
+          ZjU2Zjk4My4uMWY4Y2FmMSAxMDA2NDQKLS0tIGEvYXBwL3NyYy9tYWluL2phdmEvY29tL3RlbnNl
+          aS95dHh0dWJlL1VpS2l0Lmt0CisrKyBiL2FwcC9zcmMvbWFpbi9qYXZhL2NvbS90ZW5zZWkveXR4
+          dHViZS9VaUtpdC5rdApAQCAtMzczLDcgKzM3Myw5IEBAIGZ1biBWaWRlb0NhcmQodmlkZW86IFZp
+          ZGVvSXRlbSwgb25DbGljazogKCkgLT4gVW5pdCwgbW9kaWZpZXI6IE1vZGlmaWVyID0gTW9kaWZp
+          CiAgICAgICAgICAgICB2ZXJ0aWNhbEFsaWdubWVudCA9IEFsaWdubWVudC5Ub3AsCiAgICAgICAg
+          ICkgewogICAgICAgICAgICAgdmFsIG9wZW5DaGFubmVsID0gTG9jYWxDaGFubmVsT3BlbmVyLmN1
+          cnJlbnQKLSAgICAgICAgICAgIEJveChNb2RpZmllci5wcmVzc2FibGUoZW5hYmxlZCA9IHZpZGVv
+          LmNoYW5uZWxVcmwgIT0gbnVsbCkgeyB2aWRlby5jaGFubmVsVXJsPy5sZXQob3BlbkNoYW5uZWwp
+          IH0pIHsKKyAgICAgICAgICAgIC8vIFRWOiBvbmUgZm9jdXMgc3RvcCBwZXIgY2FyZCAoT0sgPSBv
+          cGVuLCBsb25nLXByZXNzIE9LID0gbWVudSk7IHRoZSBhdmF0YXIgYW5kIHRoZQorICAgICAgICAg
+          ICAgLy8gdGhyZWUtZG90cyBidXR0b24gd291bGQgb3RoZXJ3aXNlIHRyYXAgdGhlIEQtcGFkIGlu
+          c2lkZSBldmVyeSBjYXJkLgorICAgICAgICAgICAgQm94KE1vZGlmaWVyLnByZXNzYWJsZShlbmFi
+          bGVkID0gdmlkZW8uY2hhbm5lbFVybCAhPSBudWxsICYmICFUdk1vZGUuaXNUdikgeyB2aWRlby5j
+          aGFubmVsVXJsPy5sZXQob3BlbkNoYW5uZWwpIH0pIHsKICAgICAgICAgICAgICAgICBDaGFubmVs
+          QXZhdGFyKHZpZGVvLmZlZWRBdmF0YXIoKSwgdmlkZW8uY2hhbm5lbCwgc2l6ZSA9IDM2KQogICAg
+          ICAgICAgICAgfQogICAgICAgICAgICAgU3BhY2VyKE1vZGlmaWVyLndpZHRoKDEyLmRwKSkKQEAg
+          LTM5OSw3ICs0MDEsNyBAQCBmdW4gVmlkZW9DYXJkKHZpZGVvOiBWaWRlb0l0ZW0sIG9uQ2xpY2s6
+          ICgpIC0+IFVuaXQsIG1vZGlmaWVyOiBNb2RpZmllciA9IE1vZGlmaQogICAgICAgICAgICAgQm94
+          KAogICAgICAgICAgICAgICAgIG1vZGlmaWVyID0gTW9kaWZpZXIKICAgICAgICAgICAgICAgICAg
+          ICAgLnNpemUoNDAuZHApCi0gICAgICAgICAgICAgICAgICAgIC5wcmVzc2FibGUob25DbGljayA9
+          IHsgbWVudSh2aWRlbykgfSksCisgICAgICAgICAgICAgICAgICAgIC50aGVuKGlmIChUdk1vZGUu
+          aXNUdikgTW9kaWZpZXIgZWxzZSBNb2RpZmllci5wcmVzc2FibGUob25DbGljayA9IHsgbWVudSh2
+          aWRlbykgfSkpLAogICAgICAgICAgICAgICAgIGNvbnRlbnRBbGlnbm1lbnQgPSBBbGlnbm1lbnQu
+          Q2VudGVyLAogICAgICAgICAgICAgKSB7CiAgICAgICAgICAgICAgICAgSWNvbigK
+          PATCH_EOF
+
+      - name: Compilar APK
+        working-directory: src
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon --stacktrace assembleRelease
+
+      - name: Publicar release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp src/app/build/outputs/apk/release/app-release.apk YTXTube-TV.apk
+          ls -l YTXTube-TV.apk
+          gh release delete tv-latest -R "${{ github.repository }}" --yes --cleanup-tag || true
+          gh release create tv-latest YTXTube-TV.apk -R "${{ github.repository }}" \
+            --title "YTXTube TV" \
+            --notes "YTXTube 2.1.0 con parche para Android TV / Fire TV (uso personal)." \
+            --latest
+          echo "Descarga: https://github.com/${{ github.repository }}/releases/download/tv-latest/YTXTube-TV.apk"
